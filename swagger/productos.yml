@@ -1,0 +1,311 @@
+openapi: 3.0.0
+info:
+  title: API de InnovaTextil - Productos
+  version: "1.0.0"
+  description: >
+    API para la gestión de productos. Permite obtener, crear, actualizar y eliminar
+    productos, así como obtener productos por categoría.
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://back-innovatetex.com
+    description: Production server
+
+paths:
+  /api/productos:
+    get:
+      summary: Obtener todos los productos
+      description: Retorna una lista de productos con paginación y opción de filtro por nombre.
+      tags:
+        - Productos
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Número de página
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Número de productos por página
+        - in: query
+          name: nombre
+          schema:
+            type: string
+          description: Filtro opcional por nombre
+      responses:
+        "200":
+          description: Lista de productos obtenida exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Producto'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pages:
+                    type: integer
+        "500":
+          description: Error al obtener los productos.
+    post:
+      summary: Crear un nuevo producto
+      description: >
+        Crea un nuevo producto. Este endpoint requiere autenticación y permisos de administrador.
+        Se utiliza `multipart/form-data` para subir imágenes.
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: Datos necesarios para crear un producto.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  description: Nombre del producto.
+                descripcion:
+                  type: string
+                  description: Descripción del producto.
+                precio:
+                  type: number
+                  description: Precio del producto.
+                categoria:
+                  type: string
+                  description: ID de la categoría.
+                stock:
+                  type: integer
+                  description: Cantidad en stock.
+                sku:
+                  type: string
+                  description: Código identificador único.
+                imagen:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Imágenes del producto.
+              required:
+                - nombre
+                - descripcion
+                - precio
+                - categoria
+      responses:
+        "201":
+          description: Producto creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        "400":
+          description: Error en la creación del producto.
+        "403":
+          description: Acceso restringido.
+        "500":
+          description: Error interno.
+
+  /api/productos/{id}:
+    get:
+      summary: Obtener un producto por ID
+      description: Retorna los detalles de un producto específico.
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto.
+      responses:
+        "200":
+          description: Producto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        "404":
+          description: Producto no encontrado.
+        "500":
+          description: Error al obtener el producto.
+    put:
+      summary: Actualizar un producto
+      description: >
+        Actualiza la información de un producto existente. Requiere autenticación y permisos de administrador.
+        Se utiliza `multipart/form-data` para subir imágenes.
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto a actualizar.
+      requestBody:
+        required: true
+        description: Datos para actualizar el producto.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                descripcion:
+                  type: string
+                precio:
+                  type: number
+                categoria:
+                  type: string
+                  description: ID de la categoría.
+                stock:
+                  type: integer
+                sku:
+                  type: string
+                imagen:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+                - nombre
+                - descripcion
+                - precio
+                - categoria
+      responses:
+        "200":
+          description: Producto actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Producto'
+        "400":
+          description: Error en la actualización del producto.
+        "403":
+          description: Acceso restringido.
+        "404":
+          description: Producto no encontrado.
+        "500":
+          description: Error interno.
+    delete:
+      summary: Eliminar un producto
+      description: >
+        Elimina un producto existente. Requiere autenticación y permisos de administrador.
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del producto a eliminar.
+      responses:
+        "200":
+          description: Producto eliminado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Producto eliminado correctamente"
+        "404":
+          description: Producto no encontrado.
+        "500":
+          description: Error interno.
+
+  /api/productos/categoria/{slug}:
+    get:
+      summary: Obtener productos por categoría
+      description: >
+        Retorna una lista de productos pertenecientes a una categoría específica,
+        identificada por su slug.
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+          description: Slug de la categoría.
+      responses:
+        "200":
+          description: Lista de productos por categoría.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Producto'
+        "404":
+          description: Categoría o productos no encontrados.
+        "500":
+          description: Error interno.
+
+components:
+  schemas:
+    Producto:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "60d0fe4f5311236168a109ca"
+        nombre:
+          type: string
+          example: "Tela de algodón estampada"
+        descripcion:
+          type: string
+          example: "Tela de algodón de alta calidad con estampado exclusivo."
+        precio:
+          type: number
+          example: 49.99
+        categoria:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: "60d0fe4f5311236168a109cb"
+            nombre:
+              type: string
+              example: "Telas"
+            slug:
+              type: string
+              example: "telas"
+        imagen:
+          type: array
+          items:
+            type: string
+          example: ["https://res.cloudinary.com/demo/image/upload/sample.jpg"]
+        stock:
+          type: integer
+          example: 100
+        sku:
+          type: string
+          example: "TELA-12345"
+        fecha:
+          type: string
+          format: date-time
+          example: "2025-02-05T12:00:00Z"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

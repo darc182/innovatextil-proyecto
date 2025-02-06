@@ -1,0 +1,234 @@
+openapi: 3.0.0
+info:
+  title: API de InnovaTextil - Carrito
+  version: "1.0.0"
+  description: >
+    API para la gestión del carrito de compras. Permite obtener el carrito del usuario,
+    agregar un item, actualizar el carrito (reemplazar el array de items) y vaciarlo.
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://back-innovatetex.com
+    description: Production server
+
+paths:
+  /api/carrito:
+    get:
+      summary: Obtener el carrito del usuario
+      description: Retorna el carrito asociado al usuario autenticado, incluyendo los items y el precio total.
+      tags:
+        - Carrito
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Carrito obtenido exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+        "500":
+          description: Error al obtener el carrito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al obtener el carrito"
+    post:
+      summary: Agregar un item al carrito
+      description: >
+        Agrega un item al carrito del usuario autenticado. Si el producto ya existe en el carrito,
+        se actualiza la cantidad.
+      tags:
+        - Carrito
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Datos necesarios para agregar un item al carrito.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productoId:
+                  type: string
+                  description: ID del producto.
+                cantidad:
+                  type: number
+                  description: Cantidad a agregar.
+              example:
+                productoId: "60d0fe4f5311236168a109cc"
+                cantidad: 2
+      responses:
+        "201":
+          description: Item agregado correctamente al carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+        "400":
+          description: Se requieren productoId y cantidad.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Se requieren productoId y cantidad"
+        "500":
+          description: Error al agregar item al carrito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al agregar item al carrito"
+    put:
+      summary: Actualizar el carrito
+      description: >
+        Reemplaza el array de items del carrito del usuario autenticado.
+      tags:
+        - Carrito
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Array de items para actualizar el carrito.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  description: Array de items con el ID del producto y la cantidad.
+                  items:
+                    $ref: '#/components/schemas/ItemCarrito'
+              example:
+                items:
+                  - productoId: "60d0fe4f5311236168a109cc"
+                    cantidad: 3
+      responses:
+        "200":
+          description: Carrito actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+        "400":
+          description: Se requiere un array de items para actualizar.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Se requiere un array de items para actualizar"
+        "404":
+          description: Carrito no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Carrito no encontrado"
+        "500":
+          description: Error al actualizar el carrito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al actualizar el carrito"
+    delete:
+      summary: Vaciar el carrito
+      description: Elimina todos los items del carrito del usuario autenticado.
+      tags:
+        - Carrito
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Carrito vaciado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Carrito vaciado"
+        "404":
+          description: Carrito no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Carrito no encontrado"
+        "500":
+          description: Error al vaciar el carrito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al vaciar el carrito"
+
+components:
+  schemas:
+    ItemCarrito:
+      type: object
+      properties:
+        productoId:
+          type: string
+          description: ID del producto.
+        cantidad:
+          type: number
+          description: Cantidad del producto.
+      example:
+        productoId: "60d0fe4f5311236168a109cc"
+        cantidad: 2
+
+    Carrito:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "60d0fe4f5311236168a109ca"
+        usuario:
+          type: string
+          description: ID del usuario dueño del carrito.
+          example: "60d0fe4f5311236168a109cb"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemCarrito'
+        precioTotal:
+          type: number
+          example: 149.99
+        fecha:
+          type: string
+          format: date-time
+          example: "2025-02-05T12:00:00Z"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

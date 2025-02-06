@@ -1,0 +1,277 @@
+openapi: 3.0.0
+info:
+  title: InnovaTextil - Usuarios
+  version: "1.0.0"
+  description: >
+    Esta es la documentacion del proyecto InnovaTextil, es una app que permite 
+        automatizar y dinamizar la venta de productos de la empresa.
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  
+
+paths:
+  /api/usuarios:
+    post:
+      summary: Registrar un nuevo usuario
+      description: Registra un usuario en el sistema.
+      tags:
+        - Usuarios
+      requestBody:
+        description: Datos para el registro del usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                nombre:
+                  type: string
+                direccion:
+                  type: string
+                telefono:
+                  type: string
+              example:
+                email: "usuario@example.com"
+                password: "contraseña123"
+                nombre: "Nombre Usuario"
+                direccion: "Calle Falsa 123"
+                telefono: "123456789"
+      responses:
+        "200":
+          description: Usuario registrado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        "400":
+          description: Usuario ya registrado o error en el registro.
+
+  /api/usuarios/confirmar/{token}:
+    get:
+      summary: Confirmar cuenta de usuario
+      description: Confirma el registro del usuario usando el token enviado al email.
+      tags:
+        - Usuarios
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token de confirmación.
+      responses:
+        "200":
+          description: Usuario confirmado correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Usuario Confirmado Correctamente
+        "400":
+          description: Token no válido o error al confirmar.
+
+  /api/usuarios/login:
+    post:
+      summary: Autenticar usuario
+      description: Inicia sesión y obtiene un token JWT de autenticación.
+      tags:
+        - Usuarios
+      requestBody:
+        description: Credenciales del usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              example:
+                email: "usuario@example.com"
+                password: "contraseña123"
+      responses:
+        "200":
+          description: Usuario autenticado correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  nombre:
+                    type: string
+                  email:
+                    type: string
+                  token:
+                    type: string
+              example:
+                _id: "60d0fe4f5311236168a109ca"
+                nombre: "Nombre Usuario"
+                email: "usuario@example.com"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "404":
+          description: Usuario no existe.
+        "403":
+          description: Cuenta no confirmada o contraseña incorrecta.
+
+  /api/usuarios/olvide-password:
+    post:
+      summary: Solicitar recuperación de contraseña
+      description: Envía un email con instrucciones para recuperar la contraseña.
+      tags:
+        - Usuarios
+      requestBody:
+        description: Email del usuario que solicita recuperar la contraseña.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              example:
+                email: "usuario@example.com"
+      responses:
+        "200":
+          description: Email enviado con instrucciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Hemos enviado un email con las instrucciones
+        "400":
+          description: El usuario no existe o error en la solicitud.
+
+  /api/usuarios/olvide-password/{token}:
+    get:
+      summary: Verificar token para recuperar contraseña
+      description: Comprueba si el token de recuperación es válido.
+      tags:
+        - Usuarios
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token para recuperación de contraseña.
+      responses:
+        "200":
+          description: Token válido y el usuario existe.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Token valido y el usuario existe
+        "400":
+          description: Token no válido.
+    post:
+      summary: Establecer nueva contraseña
+      description: Permite al usuario establecer una nueva contraseña utilizando el token.
+      tags:
+        - Usuarios
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token para recuperación de contraseña.
+      requestBody:
+        description: Nueva contraseña del usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              example:
+                password: "nuevaContraseña123"
+      responses:
+        "200":
+          description: Contraseña modificada correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Password modificado correctamente
+        "400":
+          description: Error al modificar la contraseña.
+
+  /api/usuarios/perfil:
+    get:
+      summary: Obtener perfil del usuario
+      description: Retorna la información del usuario autenticado. Requiere autenticación y autorización.
+      tags:
+        - Usuarios
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Perfil obtenido exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        "403":
+          description: Token no válido o inexistente.
+
+components:
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+        nombre:
+          type: string
+        direccion:
+          type: string
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [user, admin]
+        confirmado:
+          type: boolean
+      example:
+        _id: "60d0fe4f5311236168a109ca"
+        email: "usuario@example.com"
+        nombre: "Nombre Usuario"
+        direccion: "Calle Falsa 123"
+        telefono: "123456789"
+        role: "user"
+        confirmado: true
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

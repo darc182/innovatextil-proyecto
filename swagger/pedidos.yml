@@ -1,0 +1,297 @@
+openapi: 3.0.0
+info:
+  title: API de InnovaTextil - Pedidos
+  version: "1.0.0"
+  description: >
+    API para la gestión de pedidos. Permite crear pedidos, obtener los pedidos de un usuario,
+    obtener un pedido por su ID y actualizar el estado de un pedido (restringido a administradores).
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://back-innovatetex.com
+    description: Production server
+
+paths:
+  /api/pedidos:
+    post:
+      summary: Crear un nuevo pedido
+      description: >
+        Crea un nuevo pedido para el usuario autenticado. El pedido se asocia al usuario 
+        que está realizando la solicitud.
+      tags:
+        - Pedidos
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Datos necesarios para crear un pedido.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productos:
+                  type: array
+                  description: Lista de productos incluidos en el pedido.
+                  items:
+                    type: object
+                    properties:
+                      producto:
+                        type: string
+                        description: ID del producto.
+                      cantidad:
+                        type: number
+                        description: Cantidad del producto.
+                      priceAtPurchase:
+                        type: number
+                        description: Precio del producto al momento de la compra.
+                montoTotal:
+                  type: number
+                  description: Monto total del pedido.
+                direccionEnvio:
+                  type: string
+                  description: Dirección a donde se enviará el pedido.
+              required:
+                - productos
+                - montoTotal
+      responses:
+        "200":
+          description: Pedido creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+        "500":
+          description: Error al crear el pedido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al crear el pedido"
+
+  /api/pedidos/mis-pedidos:
+    get:
+      summary: Obtener pedidos del usuario autenticado
+      description: Retorna la lista de pedidos asociados al usuario autenticado.
+      tags:
+        - Pedidos
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de pedidos del usuario.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pedido'
+        "500":
+          description: Error al obtener los pedidos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al obtener pedidos"
+
+  /api/pedidos/{id}:
+    get:
+      summary: Obtener un pedido por ID
+      description: Retorna los detalles de un pedido específico.
+      tags:
+        - Pedidos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del pedido a obtener.
+      responses:
+        "200":
+          description: Pedido encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+        "404":
+          description: Pedido no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Pedido no encontrado"
+        "500":
+          description: Error al obtener el pedido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al obtener el pedido"
+
+  /api/pedidos/{id}/estado:
+    put:
+      summary: Actualizar el estado de un pedido
+      description: >
+        Actualiza el estado de un pedido específico. Este endpoint requiere autenticación
+        y permisos de administrador. Los estados válidos son: "pendiente", "pagado", "enviado" y "entregado".
+      tags:
+        - Pedidos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID del pedido al cual se actualizará el estado.
+      requestBody:
+        description: Nuevo estado del pedido.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado:
+                  type: string
+                  enum: [pendiente, pagado, enviado, entregado]
+                  description: Nuevo estado del pedido.
+              example:
+                estado: pagado
+      responses:
+        "200":
+          description: Estado actualizado correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Estado actualizado correctamente"
+                  pedido:
+                    $ref: '#/components/schemas/Pedido'
+        "400":
+          description: Estado inválido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Estado inválido"
+        "404":
+          description: Pedido no encontrado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Pedido no encontrado"
+        "500":
+          description: Error al actualizar el estado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error al actualizar el estado"
+
+components:
+  schemas:
+    Pedido:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "60d0fe4f5311236168a109ca"
+        usuario:
+          type: object
+          description: Información del usuario que realizó el pedido.
+          properties:
+            _id:
+              type: string
+            email:
+              type: string
+            nombre:
+              type: string
+          example:
+            _id: "60d0fe4f5311236168a109cb"
+            email: "usuario@example.com"
+            nombre: "Nombre Usuario"
+        productos:
+          type: array
+          items:
+            type: object
+            properties:
+              producto:
+                type: object
+                description: Información del producto.
+                properties:
+                  _id:
+                    type: string
+                  nombre:
+                    type: string
+                  precio:
+                    type: number
+                example:
+                  _id: "60d0fe4f5311236168a109cc"
+                  nombre: "Tela de algodón estampada"
+                  precio: 49.99
+              cantidad:
+                type: number
+                description: Cantidad pedida.
+              priceAtPurchase:
+                type: number
+                description: Precio del producto al momento de la compra.
+            example:
+              producto:
+                _id: "60d0fe4f5311236168a109cc"
+                nombre: "Tela de algodón estampada"
+                precio: 49.99
+              cantidad: 2
+              priceAtPurchase: 49.99
+        montoTotal:
+          type: number
+          example: 99.98
+        estado:
+          type: string
+          enum: [pendiente, pagado, enviado, entregado]
+          example: pendiente
+        idPago:
+          type: string
+          nullable: true
+          example: "pi_1IXXXXXXX"
+        direccionEnvio:
+          type: string
+          example: "Calle Falsa 123, Ciudad, País"
+        fecha:
+          type: string
+          format: date-time
+          example: "2025-02-05T12:00:00Z"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

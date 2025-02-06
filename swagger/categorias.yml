@@ -1,0 +1,202 @@
+openapi: 3.0.0
+info:
+  title: API de InnovaTextil - Categorías
+  version: "1.0.0"
+  description: >
+    API para la gestión de categorías. Permite obtener la lista de categorías,
+    crear nuevas categorías, actualizar y eliminar categorías existentes.
+servers:
+  - url: http://localhost:4000
+    description: Development server
+  - url: https://back-innovatetex.com
+    description: Production server
+
+paths:
+  /api/categorias:
+    get:
+      summary: Obtener todas las categorías
+      description: Retorna la lista completa de categorías disponibles.
+      tags:
+        - Categorías
+      responses:
+        "200":
+          description: Lista de categorías obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Categoria'
+        "500":
+          description: Error al obtener las categorías.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error al obtener las categorías
+    post:
+      summary: Crear una nueva categoría
+      description: Crea una nueva categoría. Este endpoint requiere autenticación y permisos de administrador.
+      tags:
+        - Categorías
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Datos necesarios para crear una categoría.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+              example:
+                nombre: "Telas"
+      responses:
+        "201":
+          description: Categoría creada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+        "400":
+          description: El nombre es requerido o la categoría ya existe.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "El nombre es requerido"
+        "403":
+          description: Acceso restringido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: "Acceso restringido a administradores."
+        "500":
+          description: Error al crear la categoría.
+
+  /api/categorias/{id}:
+    put:
+      summary: Actualizar una categoría
+      description: Actualiza los datos de una categoría existente. Requiere autenticación y permisos de administrador.
+      tags:
+        - Categorías
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID de la categoría a actualizar.
+      requestBody:
+        description: Datos para actualizar la categoría.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+              example:
+                nombre: "Telas Premium"
+      responses:
+        "200":
+          description: Categoría actualizada correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+        "400":
+          description: El nombre es requerido.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "El nombre es requerido"
+        "404":
+          description: Categoría no encontrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Categoría no encontrada"
+        "500":
+          description: Error al actualizar la categoría.
+    delete:
+      summary: Eliminar una categoría
+      description: Elimina una categoría existente. Requiere autenticación y permisos de administrador.
+      tags:
+        - Categorías
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID de la categoría a eliminar.
+      responses:
+        "200":
+          description: Categoría eliminada correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Categoría eliminada correctamente"
+        "404":
+          description: Categoría no encontrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Categoría no encontrada"
+        "500":
+          description: Error al eliminar la categoría.
+
+components:
+  schemas:
+    Categoria:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "60d0fe4f5311236168a109ca"
+        nombre:
+          type: string
+          example: "Telas"
+        slug:
+          type: string
+          nullable: true
+          example: "telas"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
