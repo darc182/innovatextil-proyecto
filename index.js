@@ -32,6 +32,9 @@ conectarDB();
 
 // app.use(cors(corsOptions))
 
+app.get('/',(req,res)=>{
+    res.send("InnovaTextil online 🐱‍🏍")})
+
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/categorias', categoriaRoutes);
